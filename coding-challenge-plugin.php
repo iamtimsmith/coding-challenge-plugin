@@ -122,7 +122,6 @@ function coding_challenge_settings() {
   $site4 = get_option('cc_site_four', '');
   $site5 = get_option('cc_site_five', '');
   
-  
   ?>
 
   <div class="wrap">
