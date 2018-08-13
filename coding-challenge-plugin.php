@@ -65,8 +65,9 @@ function coding_challenge_dashboard() { ?>
         'post_content' => $_POST['foreign_post_content'],
         'post_type' => $_POST['foreign_post_type']
       );
-      wp_insert_post($post_to_add);
-
+      $post_id = wp_insert_post($post_to_add);
+      $post = get_post($post_id);
+      wp_redirect("/wp-admin/post.php?post=" . $post_id . "&action=edit");
     }
 
     foreach (array_slice($list_of_posts, 0, 10) as $post) {
