@@ -22,7 +22,11 @@ function coding_challenge_dashboard() { ?>
   <div class="wrap">
     <h2>Imported Posts</h2>
     <table>
-
+      <tr>
+        <th>Title</th>
+        <th>Source</th>
+        <th>Date</th>
+      </tr>
     <?php
     $url_for_posts = [
       "http://" . parse_url( get_option('cc_site_one') )['host'],
@@ -39,11 +43,14 @@ function coding_challenge_dashboard() { ?>
         $body = wp_remote_retrieve_body( wp_remote_get("$url/wp-json/wp/v2/$type") );
         $results = json_decode($body);
         foreach ($results as $result) {
-          array_push($list_of_posts, $result);
+          if (!post_exists($result->title->rendered) ) {
+            array_push($list_of_posts, $result);
+          }
         }
       }
     }
-    
+
+
     // Sort by date
     function sort_posts_by_date($a, $b) {
       if( strtotime($a->modified) == strtotime($b->modified) ){ return 0;}
@@ -51,17 +58,31 @@ function coding_challenge_dashboard() { ?>
     }
     usort($list_of_posts, 'sort_posts_by_date');
 
-    foreach (array_slice($list_of_posts, 0, 10) as $post) {
+    // Add post submit
+    if (array_key_exists('add_foreign_post', $_POST)) {
+      $post_to_add = array(
+        'post_title' => $_POST['foreign_post_title'],
+        'post_content' => $_POST['foreign_post_content'],
+        'post_type' => $_POST['foreign_post_type']
+      );
+      wp_insert_post($post_to_add);
 
+    }
+
+    foreach (array_slice($list_of_posts, 0, 10) as $post) {
       $render = "<tr>";
       $render .= "<td>" . $post->title->rendered ."</td>";
       $render .= "<td>" . parse_url($post->guid->rendered)['host'] ."</td>";
       $render .= "<td>" . $post->modified . "</td>";
-      $render .= "<td><button class='button button-primary'>Add</button></td>";
+      $render .= "<td><form method='post' action=''>";
+      $render .= "<input style='display:none' type='text' name='foreign_post_title' value='" . $post->title->rendered . "' />";
+      $render .= "<input style='display:none' type='text' name='foreign_post_type' value='" . $post->type . "' />";
+      $render .= "<textarea name='foreign_post_content' style='display:none'>". $post->content->rendered ."</textarea>";
+      $render .= "<input type='submit' name='add_foreign_post' class='button button-primary' value='Add' />";
+      $render .= "</form></td>";
       $render .= "</tr>";
       echo $render;
     }
-
 
     ?>
     </table>
